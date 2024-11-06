@@ -1,5 +1,11 @@
 const axios = require("axios");
 
+/*
+- fetch the repository link from the GitHub API using axios.
+- functionality to extract the repository's `owner` and `repo` parameters from the URL.
+- Returned the repository's URL in the response for use in the deployment process.
+- error handling in case of non-existent or private repositories.
+*/
 const getRepoLink = async (req, res) => {
   const { owner, repo } = req.params;
   try {
