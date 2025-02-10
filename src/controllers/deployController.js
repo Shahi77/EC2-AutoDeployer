@@ -78,4 +78,4 @@ const deployExistingInstance = async (req, res) => {
   }
 };
 
-module.export = { deployNewInstance, deployExistingInstance };
+module.exports = { deployNewInstance, deployExistingInstance };
