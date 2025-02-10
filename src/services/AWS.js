@@ -47,6 +47,7 @@ class Aws {
         IamInstanceProfile: {
           Name: aws.iamRole,
         },
+        //   KeyName: aws.keyPair,
       };
 
       if (title) {
@@ -76,11 +77,36 @@ class Aws {
         InstanceIds: [instanceId],
       });
       const res = await Aws.#ec2Client.send(command);
+      if (!res.Reservations || res.Reservations.length === 0) {
+        throw new Error("No reservations found for instance");
+      }
       const instance = res.Reservations[0].Instances[0];
+      if (!instance || !instance.PublicIpAddress) {
+        throw new Error("Public IP not available yet");
+      }
       return instance.PublicIpAddress;
     } catch (error) {
       console.log("Error in fetching instance details:", error);
     }
+  }
+  //Exponential backoff instead of a fixed delay
+  async waitForCommandExecution(commandId, instanceId) {
+    let status;
+    let waitTime = 5000; // Start with 5 seconds
+
+    do {
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      waitTime = Math.min(waitTime * 2, 30000); // Increase delay, max 30 sec
+
+      const invocationParams = { CommandId: commandId, InstanceId: instanceId };
+      const invocation = await Aws.#ssmClient.send(
+        new GetCommandInvocationCommand(invocationParams)
+      );
+      status = invocation.Status;
+
+      if (status === "Success") return invocation;
+      if (status === "Failed") throw new Error("Commands failed to execute");
+    } while (status === "InProgress" || status === "Pending");
   }
 
   // Setup EC2 instance for Node.js
@@ -96,48 +122,21 @@ class Aws {
       const commands = [
         "cd /root",
         "sudo apt update -y && sudo apt upgrade -y",
+        "curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -",
         "sudo apt install -y nodejs",
-        "sudo apt install -y npm",
         "npm install -g pm2",
       ];
 
       const params = {
         InstanceIds: [instanceId],
         DocumentName: "AWS-RunShellScript",
-        Parameters: {
-          commands: commands,
-        },
+        Parameters: { commands },
       };
 
-      const command = new SendCommandCommand(params);
-      const res = await Aws.#ssmClient.send(command);
-      const commandId = res.Command.CommandId;
-      console.log(`Sent command ${commandId} to set up the instance`);
-
-      let status;
-      do {
-        const invocationParams = {
-          CommandId: commandId,
-          InstanceId: instanceId,
-        };
-
-        const invocation = await Aws.#ssmClient.send(
-          new GetCommandInvocationCommand(invocationParams)
-        );
-        status = invocation.Status;
-
-        if (status === "Success") {
-          console.log("Commands executed successfully");
-          return res;
-        }
-        if (status === "Failed") {
-          console.error("Commands failed to execute");
-          return res;
-        }
-
-        // Wait before polling again
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      } while (status === "InProgress" || status === "Pending");
+      const res = await Aws.#ssmClient.send(new SendCommandCommand(params));
+      await this.waitForCommandExecution(res.Command.CommandId, instanceId);
+      console.log(`Instance setup completed successfully.`);
+      return res;
     } catch (error) {
       console.log("Error setting up the environment for Node.js:", error);
     }
@@ -149,13 +148,14 @@ class Aws {
       const projectName = extractProjectName(repositoryUrl);
       console.log("Cloning", repositoryUrl);
 
-      // Modified command format using template literals properly
       const commands = [
         "cd /root",
+        "sudo pm2 delete all || true", // Remove previous PM2 instances
         `git clone ${repositoryUrl}`,
         `cd ${projectName}`,
         "touch .env",
         `echo "${env.join("\n")}" > .env`,
+        "chmod 600 .env", // Ensure `.env` is readable but secure
         "npm install",
       ];
 
@@ -163,14 +163,10 @@ class Aws {
         commands.push(
           "npm i -g typescript",
           "tsc",
-          "sudo pm2 delete backend || true", // 🔹 Ensures previous instance is removed
           "sudo pm2 start dist/index.js --name backend -i max"
         );
       } else {
-        commands.push(
-          "sudo pm2 delete backend || true", // 🔹 Ensures previous instance is removed
-          "sudo pm2 start src/index.js --name backend -i max"
-        );
+        commands.push("sudo pm2 start src/index.js --name backend -i max");
       }
 
       console.log("Cloning and deploying project");
@@ -178,39 +174,13 @@ class Aws {
       const params = {
         InstanceIds: [instanceId],
         DocumentName: "AWS-RunShellScript",
-        Parameters: {
-          commands: commands,
-        },
+        Parameters: { commands },
       };
 
-      const command = new SendCommandCommand(params);
-      const res = await Aws.#ssmClient.send(command);
-      const commandId = res.Command.CommandId;
-      console.log(`Sent command ${commandId} to deploy the project`);
-
-      let status;
-      do {
-        const invocationParams = {
-          CommandId: commandId,
-          InstanceId: instanceId,
-        };
-
-        const invocation = await Aws.#ssmClient.send(
-          new GetCommandInvocationCommand(invocationParams)
-        );
-        status = invocation.Status;
-
-        if (status === "Success") {
-          console.log("Commands executed successfully");
-          return res;
-        }
-        if (status === "Failed") {
-          console.error("Commands failed to execute");
-          return res;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      } while (status === "InProgress" || status === "Pending");
+      const res = await Aws.#ssmClient.send(new SendCommandCommand(params));
+      await this.waitForCommandExecution(res.Command.CommandId, instanceId);
+      console.log(`Project deployed successfully.`);
+      return res;
     } catch (error) {
       console.log("Error deploying the project:", error);
     }
