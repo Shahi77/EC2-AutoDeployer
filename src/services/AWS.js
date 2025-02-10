@@ -10,8 +10,8 @@ const {
   GetCommandInvocationCommand,
 } = require("@aws-sdk/client-ssm");
 const { fromEnv } = require("@aws-sdk/credential-providers");
-const { aws } = require("../config/keys"); // Ensure aws config has correct keys for the region, AMI, etc.
-const extractProjectName = require("../utils/extractProjectName"); // Import extractProjectName function if it exists
+const { aws } = require("../config/keys");
+const extractProjectName = require("../utils/extractProjectName");
 
 class Aws {
   static #instance = null;
@@ -163,10 +163,14 @@ class Aws {
         commands.push(
           "npm i -g typescript",
           "tsc",
+          "sudo pm2 delete backend || true", // 🔹 Ensures previous instance is removed
           "sudo pm2 start dist/index.js --name backend -i max"
         );
       } else {
-        commands.push("sudo pm2 start src/index.js --name backend -i max");
+        commands.push(
+          "sudo pm2 delete backend || true", // 🔹 Ensures previous instance is removed
+          "sudo pm2 start src/index.js --name backend -i max"
+        );
       }
 
       console.log("Cloning and deploying project");
@@ -205,7 +209,6 @@ class Aws {
           return res;
         }
 
-        // Wait before polling again
         await new Promise((resolve) => setTimeout(resolve, 5000));
       } while (status === "InProgress" || status === "Pending");
     } catch (error) {
