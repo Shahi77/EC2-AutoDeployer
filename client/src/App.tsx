@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react"
+import axios from "axios"
+import TabSelector from "./TabSelector"
+import NewInstanceForm from "./NewInstanceForm"
+import ExistingInstanceForm from "./ExistingInstanceForm"
+import DeploymentStatus from "./DeploymentStatus"
+import "./App.css"
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [activeTab, setActiveTab] = useState<"new" | "existing">("new")
+  const [deploymentStatus, setDeploymentStatus] = useState<string | null>(null)
+
+  const handleDeploy = async (data: any, endpoint: string) => {
+    try {
+      const response = await axios.post(endpoint, data)
+      setDeploymentStatus(JSON.stringify(response.data, null, 2))
+    } catch (error) {
+      setDeploymentStatus("Error: " + (error as Error).message)
+    }
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="app">
+      <h1>Deployment UI</h1>
+      <TabSelector activeTab={activeTab} setActiveTab={setActiveTab} />
+      {activeTab === "new" ? (
+        <NewInstanceForm onDeploy={(data) => handleDeploy(data, "/new-instance")} />
+      ) : (
+        <ExistingInstanceForm onDeploy={(data) => handleDeploy(data, "/existing-instance")} />
+      )}
+      <DeploymentStatus status={deploymentStatus} />
+    </div>
   )
 }
 
-export default App
