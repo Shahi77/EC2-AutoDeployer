@@ -1,97 +1,42 @@
-body {
-  font-family: Arial, sans-serif;
-  line-height: 1.6;
-  margin: 0;
-  padding: 20px;
-  background-color: #f4f4f4;
-}
-
-.app {
-  max-width: 800px;
+#root {
+  max-width: 1280px;
   margin: 0 auto;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
+  padding: 2rem;
   text-align: center;
-  color: #333;
 }
 
-.tab-selector {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-.tab-selector button {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #f0f0f0;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.tab-selector button.active {
-  background-color: #007bff;
-  color: #fff;
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
 }
 
-.deployment-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.card {
+  padding: 2em;
 }
 
-.deployment-form div {
-  display: flex;
-  flex-direction: column;
-}
-
-.deployment-form label {
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.deployment-form input,
-.deployment-form select {
-  padding: 8px;
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.deployment-form button {
-  padding: 10px;
-  font-size: 16px;
-  background-color: #28a745;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.deployment-form button:hover {
-  background-color: #218838;
-}
-
-.deployment-status {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.deployment-status h3 {
-  margin-top: 0;
-  color: #333;
-}
-
-.deployment-status pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
+.read-the-docs {
+  color: #888;
 }
