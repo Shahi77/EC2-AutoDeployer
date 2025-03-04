@@ -1,0 +1,57 @@
+.deployment-status {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 0 0 8px 8px;
+}
+
+.deployment-status.success {
+    background-color: #f0fdf4;
+    border-top: 1px solid #dcfce7;
+}
+
+.deployment-status.error {
+    background-color: #fef2f2;
+    border-top: 1px solid #fee2e2;
+}
+
+.deployment-status h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.status-message {
+    font-weight: 500;
+    margin-bottom: 15px;
+}
+
+.success .status-message {
+    color: #166534;
+}
+
+.error .status-message {
+    color: #b91c1c;
+}
+
+.status-details {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.status-details h4 {
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #4b5563;
+}
+
+.status-details pre {
+    background-color: #f8fafc;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
